@@ -65,8 +65,6 @@ if ( !function_exists('update_template_hierarchy') ):
  * Creates a global variable that contains the template hierarchy for the current page.
  *
  * Calling update_template_hierarchy() will recalculate the template hierarchy for $wp_query.
- *
- * @uses template_loader() Calculates the template hierarchy.
  */
 function update_template_hierarchy() {
 	global $wp_template_hierarchy;
@@ -98,14 +96,10 @@ function update_template_hierarchy() {
 			// see get_attachment_template()
 			global $posts;
 			$type = explode('/', $posts[0]->post_mime_type);
-			if ( $template = get_query_template($type[0]) )
-				$templates[] = $template;
-			elseif ( $template = get_query_template($type[1]) )
-				$templates[] = $template;
-			elseif ( $template = get_query_template("$type[0]_$type[1]") )
-				$templates[] = $template;
-			else
-				$templates[] = 'attachment.php';
+			$templates[] = "{$type[0]}.php";
+			$templates[] = "{$type[1]}.php";
+			$templates[] = "{$type[0]}_{$type[1]}.php";
+			$templates[] = 'attachment.php';
 
 		elseif ( is_single() ):
 			// see get_single_template()
