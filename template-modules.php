@@ -28,17 +28,17 @@ if ( !function_exists('get_template_module') ):
  * @return string The file path to the loaded file. The empty string if no file was found.
  */
 function get_template_module( $module ) {
-    $template_hierarchy = get_template_hierarchy();
-    $template_names = array();
-    foreach( $template_hierarchy as $template_name ) {
-        $template_names[] = $module . '/' . $template_name;
-    }
+	$template_hierarchy = get_template_hierarchy();
+	$template_names = array();
+	foreach( $template_hierarchy as $template_name ) {
+		$template_names[] = $module . '/' . $template_name;
+	}
 	// fall backs
 	$template_names[] = $module . '/index.php';
 	$template_names[] = $module . '.php';
 
-    $located = locate_template($template_names, true, false);
-    return $located;
+	$located = locate_template($template_names, true, false);
+	return $located;
 }
 endif;
 
