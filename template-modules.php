@@ -33,8 +33,7 @@ function get_template_module( $module ) {
 	foreach( $template_hierarchy as $template_name ) {
 		$template_names[] = $module . '/' . $template_name;
 	}
-	// fall backs
-	$template_names[] = $module . '/index.php';
+	// fall back
 	$template_names[] = $module . '.php';
 
 	$located = locate_template($template_names, true, false);
@@ -60,6 +59,7 @@ function get_template_hierarchy() {
 }
 endif;
 
+
 if ( !function_exists('update_template_hierarchy') ):
 /**
  * Creates a global variable that contains the template hierarchy for the current page.
@@ -68,118 +68,62 @@ if ( !function_exists('update_template_hierarchy') ):
  */
 function update_template_hierarchy() {
 	global $wp_template_hierarchy;
-	
-	if ( defined('WP_USE_THEMES') && WP_USE_THEMES ) :
-		$templates = array();
+  $wp_template_hierarchy = array();
 
-		if ( is_404() ):
-			$templates[] = '404.php';
-		elseif ( is_search() ):
-			$templates[] = 'search.php';
-		elseif ( is_tax() ):
-			// see get_taxonomy_template()
-			$taxonomy = get_query_var('taxonomy');
-			$term = get_query_var('term');
+  $types = array('index', '404', 'archive', 'author', 'category', 'tag', 'taxonomy', 'date', 
+    'home', 'front_page', 'page', 'paged', 'search', 'single', 'attachment', 'comments_popup');
 
-			if ( $taxonomy && $term )
-				$templates[] = "taxonomy-$taxonomy-$term.php";
-			if ( $taxonomy )
-				$templates[] = "taxonomy-$taxonomy.php";
-			$templates[] = "taxonomy.php";
+  if ( is_attachment() ) {
+    global $posts;
+    $type = explode('/', $posts[0]->post_mime_type);
+    $types[] = $type[0];
+    $types[] = $type[1];
+    $types[] = "{$type[0]}_{$type[1]}";
+  }
 
-		elseif ( is_front_page() ):
-			$templates[] = 'front-page.php';
-		elseif ( is_home() ):
-			$templates[] = 'home.php';
-			$templates[] = 'index.php';
-		elseif ( is_attachment() ):
-			// see get_attachment_template()
-			global $posts;
-			$type = explode('/', $posts[0]->post_mime_type);
-			$templates[] = "{$type[0]}.php";
-			$templates[] = "{$type[1]}.php";
-			$templates[] = "{$type[0]}_{$type[1]}.php";
-			$templates[] = 'attachment.php';
+  // add filters
+  foreach( $types as $type ) {
+    $type = preg_replace( '|[^a-z0-9-]+|', '', $type );
+    add_filter("{$type}_template_hierarchy", '_record_template_hierarchy', 99);
+  }
 
-		elseif ( is_single() ):
-			// see get_single_template()
-			global $wp_query;
+  // copied from wp-includes/template-loader.php
+  if ( is_404() )            get_404_template();
+  if ( is_search() )         get_search_template();
+  if ( is_tax() )            get_taxonomy_template();
+  if ( is_front_page() )     get_front_page_template();
+  if ( is_home() )           get_home_template();
+  if ( is_attachment() )     get_attachment_template();
+  if ( is_single() )         get_single_template();
+  if ( is_page() )           get_page_template();
+  if ( is_category() )       get_category_template();
+  if ( is_tag() )            get_tag_template();
+  if ( is_author() )         get_author_template();
+  if ( is_date() )           get_date_template();
+  if ( is_archive() )        get_archive_template();
+  if ( is_comments_popup() ) get_comments_popup_template();
+  if ( is_paged() )          get_paged_template();
+  get_index_template();
 
-			$object = $wp_query->get_queried_object();
-			$templates[] = "single-{$object->post_type}.php";
-			$templates[] = 'single.php';
+  // remove filters
+  foreach( $types as $type ) {
+    $type = preg_replace( '|[^a-z0-9-]+|', '', $type );
+    remove_filter("{$type}_template_hierarchy", '_record_template_hierarchy', 99);
+  }
 
-		elseif ( is_page() ):
-			// see get_page_template()
-			global $wp_query;
+  $wp_template_hierarchy = array_unique($wp_template_hierarchy);
+}
+endif;
 
-			$id = (int) $wp_query->get_queried_object_id();
-			$template = get_post_meta($id, '_wp_page_template', true);
-			$pagename = get_query_var('pagename');
 
-			if ( !$pagename && $id > 0 ) {
-				// If a static page is set as the front page, $pagename will not be set. Retrieve it from the queried object
-				$post = $wp_query->get_queried_object();
-				$pagename = $post->post_name;
-			}
-
-			if ( 'default' == $template )
-				$template = '';
-
-			if ( !empty($template) && !validate_file($template) )
-				$templates[] = $template;
-			if ( $pagename )
-				$templates[] = "page-$pagename.php";
-			if ( $id )
-				$templates[] = "page-$id.php";
-			$templates[] = "page.php";
-
-		elseif ( is_category() ):
-			// see get_category_template()
-			$cat_ID = absint( get_query_var('cat') );
-			$category = get_category( $cat_ID );
-
-			if ( !is_wp_error($category) )
-				$templates[] = "category-{$category->slug}.php";
-
-			$templates[] = "category-$cat_ID.php";
-			$templates[] = "category.php";
-
-		elseif ( is_tag() ):
-			// see get_tag_template()
-			$tag_id = absint( get_query_var('tag_id') );
-			$tag_name = get_query_var('tag');
-
-			if ( $tag_name )
-				$templates[] = "tag-$tag_name.php";
-			if ( $tag_id )
-				$templates[] = "tag-$tag_id.php";
-			$templates[] = "tag.php";
-
-		elseif ( is_author() ):
-			// see get_author_template()
-			$author_id = absint( get_query_var( 'author' ) );
-			$author = get_user_by( 'id', $author_id );
-			$author = $author->user_nicename;
-
-			if ( $author )
-				$templates[] = "author-{$author}.php";
-			if ( $author_id )
-				$templates[] = "author-{$author_id}.php";
-			$templates[] = 'author.php';
-
-		elseif ( is_date() ):
-			$templates[] = 'date.php';
-		elseif ( is_archive() ):
-			$templates[] = 'archive.php';
-		elseif ( is_comments_popup() ):
-			$templates[] = 'comments-popup.php';
-		elseif ( is_paged() ):
-			$templates[] = 'paged.php';
-		endif;
-
-		$wp_template_hierarchy = $templates;
-	endif;
+if ( !function_exists('_record_template_hierarchy') ):
+/**
+ *
+ */
+function _record_template_hierarchy( $templates ) {
+  global $wp_template_hierarchy;
+  $wp_template_hierarchy = array_merge($wp_template_hierarchy, $templates);
+  return null;
 }
 endif;
 
