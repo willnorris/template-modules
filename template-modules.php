@@ -29,7 +29,7 @@ if ( !function_exists('get_template_module') ):
  * @return string The file path to the loaded file. The empty string if no file was found.
  */
 function get_template_module( $module ) {
-  global $wp_template_hierarchy;
+  $template_hierarchy = get_template_hierarchy();
 
   $templates = array();
   foreach( $wp_template_hierarchy as $template ) {
@@ -40,6 +40,16 @@ function get_template_module( $module ) {
   $located = locate_template($templates, true, false);
   return $located;
 }
+
+/**
+ * Get the hierarchy of templates used to handle the current request.
+ */
+function get_template_hierarchy( $module ) {
+  global $wp_template_hierarchy;
+  return $wp_template_hierarchy;
+}
+
+// Internal methods -- do not call directly
 
 /**
  * Setup hooks to record the template hierarchy.
