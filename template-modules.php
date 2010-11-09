@@ -11,6 +11,7 @@
 
 
 if ( !function_exists('get_template_module') ):
+
 /**
  * Load a template from a folder based upon the best match from the template hierarchy.
  *
@@ -28,102 +29,62 @@ if ( !function_exists('get_template_module') ):
  * @return string The file path to the loaded file. The empty string if no file was found.
  */
 function get_template_module( $module ) {
-	$template_hierarchy = get_template_hierarchy();
-	$template_names = array();
-	foreach( $template_hierarchy as $template_name ) {
-		$template_names[] = $module . '/' . $template_name;
-	}
-	// fall back
-	$template_names[] = $module . '.php';
+  global $wp_template_hierarchy;
 
-	$located = locate_template($template_names, true, false);
-	return $located;
+  $templates = array();
+  foreach( $wp_template_hierarchy as $template ) {
+    $templates[] = $module . '/' . $template;
+  }
+  $templates[] = $module . '.php';
+
+  $located = locate_template($templates, true, false);
+  return $located;
 }
-endif;
 
-
-if ( !function_exists('get_template_hierarchy') ):
 /**
- * Returns the template hierarchy for the current page.
- *
- * @return array
- */	
-function get_template_hierarchy() {
-	global $wp_template_hierarchy;
-
-	if ( !isset($wp_template_hierarchy) ) {
-		update_template_hierarchy();
-	}
-
-	return $wp_template_hierarchy;
-}
-endif;
-
-
-if ( !function_exists('update_template_hierarchy') ):
-/**
- * Creates a global variable that contains the template hierarchy for the current page.
- *
- * Calling update_template_hierarchy() will recalculate the template hierarchy for $wp_query.
+ * Setup hooks to record the template hierarchy.
  */
-function update_template_hierarchy() {
-	global $wp_template_hierarchy;
-  $wp_template_hierarchy = array();
-
+function record_template_hierarchy() {
   $types = array('index', '404', 'archive', 'author', 'category', 'tag', 'taxonomy', 'date', 
     'home', 'front_page', 'page', 'paged', 'search', 'single', 'attachment', 'comments_popup');
 
-  if ( is_attachment() ) {
-    global $posts;
-    $type = explode('/', $posts[0]->post_mime_type);
-    $types[] = $type[0];
-    $types[] = $type[1];
-    $types[] = "{$type[0]}_{$type[1]}";
-  }
-
-  // add filters
   foreach( $types as $type ) {
     $type = preg_replace( '|[^a-z0-9-]+|', '', $type );
     add_filter("{$type}_template_hierarchy", '_record_template_hierarchy', 99);
+    add_filter("{$type}_template", '_located_template', 99);
   }
-
-  // copied from wp-includes/template-loader.php
-  if ( is_404() )            get_404_template();
-  if ( is_search() )         get_search_template();
-  if ( is_tax() )            get_taxonomy_template();
-  if ( is_front_page() )     get_front_page_template();
-  if ( is_home() )           get_home_template();
-  if ( is_attachment() )     get_attachment_template();
-  if ( is_single() )         get_single_template();
-  if ( is_page() )           get_page_template();
-  if ( is_category() )       get_category_template();
-  if ( is_tag() )            get_tag_template();
-  if ( is_author() )         get_author_template();
-  if ( is_date() )           get_date_template();
-  if ( is_archive() )        get_archive_template();
-  if ( is_comments_popup() ) get_comments_popup_template();
-  if ( is_paged() )          get_paged_template();
-  get_index_template();
-
-  // remove filters
-  foreach( $types as $type ) {
-    $type = preg_replace( '|[^a-z0-9-]+|', '', $type );
-    remove_filter("{$type}_template_hierarchy", '_record_template_hierarchy', 99);
-  }
-
-  $wp_template_hierarchy = array_unique($wp_template_hierarchy);
 }
-endif;
+add_action('wp', 'record_template_hierarchy');
 
-
-if ( !function_exists('_record_template_hierarchy') ):
 /**
- *
+ * Record the template hierarchy.
  */
 function _record_template_hierarchy( $templates ) {
-  global $wp_template_hierarchy;
-  $wp_template_hierarchy = array_merge($wp_template_hierarchy, $templates);
-  return null;
+  global $wp_template_hierarchy, $_located_template;
+  $wp_template_hierarchy = array_merge((array)$wp_template_hierarchy, $templates);
+  if ( !$_located_template ) {
+    return $templates;
+  }
 }
-endif;
 
+/**
+ * Record the located template so that it may be returned later, but return an
+ * empty string so that WordPress will continue processing the template hierarchy.
+ */
+function _located_template( $template ) {
+  global $_located_template;
+  if ( !$_located_template && $template ) {
+    $_located_template = $template;
+  }
+}
+
+/**
+ * Restore the located template.
+ */
+function _restore_template( $template ) {
+  global $_located_template;
+  return $template ? $template : $_located_template;
+}
+add_filter('template_include', '_restore_template');
+
+endif;
