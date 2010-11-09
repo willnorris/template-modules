@@ -32,7 +32,7 @@ function get_template_module( $module ) {
   $template_hierarchy = get_template_hierarchy();
 
   $templates = array();
-  foreach( $wp_template_hierarchy as $template ) {
+  foreach( $template_hierarchy as $template ) {
     $templates[] = $module . '/' . $template;
   }
   $templates[] = $module . '.php';
@@ -44,7 +44,7 @@ function get_template_module( $module ) {
 /**
  * Get the hierarchy of templates used to handle the current request.
  */
-function get_template_hierarchy( $module ) {
+function get_template_hierarchy() {
   global $wp_template_hierarchy;
   return $wp_template_hierarchy;
 }
