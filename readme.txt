@@ -4,6 +4,8 @@ Tags: themes, modular, templates
 Requires at least: 3.0
 Tested up to: 3.0
 Stable tag: trunk
+License: Apache 2.0
+License URI: https://www.apache.org/licenses/LICENSE-2.0
 
 Add the infrastructure to enable Daryl Koopersmith's modular theme concept.
 

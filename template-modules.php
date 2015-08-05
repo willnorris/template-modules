@@ -6,7 +6,8 @@
  Author: Will Norris
  Author URI: http://willnorris.com/
  Version: 1.0-trunk
- License: Apache License, Version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.html)
+ License: Apache 2.0
+ License URI: https://www.apache.org/licenses/LICENSE-2.0
  */
 
 
