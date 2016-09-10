@@ -16,9 +16,9 @@ This is a plugin based implementation of Daryl Koopersmith's modular themes conc
 of well-architected themes with highly reusable code.  For more on the use of this function, 
 read Daryl's series of posts:
 
- - [Modular Themes, Part 1: Why?](http://drylk.com/2010/04/06/modular-themes-why/)
- - [Modular Themes, Part 2: Theme Organization](http://drylk.com/2010/04/06/modular-themes-organization/)
- - [Modular Themes, Performance](http://drylk.com/2010/04/06/modular-themes-performance/)
+ - [Modular Themes, Part 1: Why?](https://web.archive.org/web/20150325001255/http://drylk.com/2010/04/06/modular-themes-why/)
+ - [Modular Themes, Part 2: Theme Organization](https://web.archive.org/web/20150209034618/http://drylk.com/2010/04/06/modular-themes-organization/)
+ - [Modular Themes, Performance](https://web.archive.org/web/20150209044236/http://drylk.com/2010/04/06/modular-themes-performance/)
 
 If you like this method of WordPress theme design, then vote up ticket [#12877][].  The ideal 
 scenario is for this functionality to be provided in WordPress core.  This plugin is simply a proof 
